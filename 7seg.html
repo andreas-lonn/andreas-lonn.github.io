@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<!--
+    +------+
+    | 7seg |
+    +------+
+    https://andreas-lonn.github.io/7seg.html
+
+    Hello
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Seg</title>
+    <style>
+        @import url(toolstyle.css) layer(toolstyle);
+
+        h1 {
+            grid-area: h1;
+            margin-bottom: 0;
+        }
+
+        #warning {
+            grid-area: warn;
+            display: none;
+            position: sticky;
+            top: 0;
+            background-color: var(--background-color-warning);
+            color: var(--on-background-color-warning);
+            border: 0.1em solid var(--on-background-color-warning);
+            padding: 0.5em;
+        }
+        #warning.open {
+            display: initial;
+        }
+
+        form#params {
+            grid-area: form;
+        }
+
+        aside {
+            grid-area: aside;
+        }
+
+        main {
+            grid-template-areas: "h1   h1"
+                                 "warn warn"
+                                 "form aside";
+            grid-template-columns: 1fr 1fr;
+            display: grid;
+            gap: 1em;
+            width: unset;
+        }
+
+        @media (max-width: 600px) {
+            main {
+                grid-template-areas: "h1"
+                                     "warn"
+                                     "form"
+                                     "aside";
+                grid-template-columns: 1fr;
+            }
+        }
+
+        #digit{
+            --seg-off: rgba(255, 76, 76, .12);
+            --seg-on:  #ff3b3b;
+            --seg-glow: rgba(255, 59, 59, .45);
+            --width: 33vw;
+            width: var(--width);
+            height: calc(var(--width) * 1.6);
+            position:relative;
+            border-radius: 16px;
+            background: rgba(0,0,0,.18);
+            border: 1px solid rgba(255,255,255,.10);
+            overflow:hidden;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+        }
+        @media (prefers-color-scheme: light){
+            #digit{ background: rgba(11,16,32,.05); }
+        }
+
+        .seg{
+            position:absolute;
+            background: var(--seg-off);
+            filter: drop-shadow(0 0 0 transparent);
+            transition: background .12s ease, filter .12s ease;
+            z-index: 1;
+            pointer-events: none;
+            border-radius: 999px;
+
+            --thickness: calc(var(--width) / 8);
+            --spacing: calc(sqrt(2) * var(--thickness) / 2 * 0.6);
+            --margin-outer: calc(var(--thickness) * 1.2);
+
+            --margin-corner: calc(var(--margin-outer) + var(--thickness) / 2 + var(--spacing));
+            --height: calc(50% - var(--margin-corner) - var(--spacing));
+        }
+        .seg.on{
+            background: var(--seg-on);
+            filter: drop-shadow(0 0 10px var(--seg-glow));
+        }
+
+        .seg.a{ top:    var(--margin-outer);   left:   var(--margin-corner); right:   var(--margin-corner);  height: var(--thickness); }
+        .seg.d{ bottom: var(--margin-outer);   left:   var(--margin-corner); right:   var(--margin-corner);  height: var(--thickness); }
+        .seg.g{ top:    calc(50% - var(--thickness) / 2);  left:   var(--margin-corner); right:   var(--margin-corner);  height: var(--thickness); }
+        .seg.f{ top:    var(--margin-corner);  left:   var(--margin-outer); height:  var(--height);  width:  var(--thickness); }
+        .seg.b{ top:    var(--margin-corner);  right:  var(--margin-outer); height:  var(--height);  width:  var(--thickness); }
+        .seg.e{ bottom: var(--margin-corner);  left:   var(--margin-outer); height:  var(--height);  width:  var(--thickness); }
+        .seg.c{ bottom: var(--margin-corner);  right:  var(--margin-outer); height:  var(--height);  width:  var(--thickness); }
+
+        .seg.dp{
+            width: var(--thickness);
+            height: var(--thickness);
+            right: calc(var(--margin-outer) - var(--thickness));
+            bottom: var(--margin-outer);
+        }
+    </style>
+</head>
+<body>
+    <noscript>
+        <h2>This tool does not work without JavaScript. Please enable it.</h2>
+    </noscript>
+
+    <main>
+        <h1>7 Segment Display</h1>
+
+        <div id="warning">
+            <span></span>
+            <button>Close</button>
+        </div>
+
+        <form id="params" novalidate>
+            <label>Input vector
+                <input type="number" min="0" value="10111111" name="input-vector">
+            </label>
+
+            <details open>
+                <summary>Options</summary>
+                <fieldset>
+                    <label>Order
+                        <select name="order">
+                            <option value="abcdefgp">A B C D E F G DP</option>
+                            <option value="pabcdefg">DP A B C D E F G</option>
+                            <option value="gfedcbap">G F E D C B A DP</option>
+                            <option value="pgfedcba" selected>DP G F E D C B A</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <input type="checkbox" checked name="active-low">
+                        Active low
+                    </label>
+                </fieldset>
+            </details>
+
+            <details>
+                <summary>Advanced</summary>
+                <fieldset>
+                    <label>Animation
+                        <select name="anim">
+                            <option value="stop" selected>No animation</option>
+                            <option value="circle">Circle</option>
+                            <option value="circle-two">Two in a circle</option>
+                            <option value="figure8">Figure 8</option>
+                            <option value="hex">Numbers + HEX</option>
+                        </select>
+                    </label>
+                    <label>Animation speed
+                        <input type="range" min="0" max="500" value="200" name="anim-speed">
+                    </label>
+                </fieldset>
+            </details>
+        </form>
+
+        <aside>
+            <div id="digit">
+                <div class="seg a"></div>
+                <div class="seg b"></div>
+                <div class="seg c"></div>
+                <div class="seg d"></div>
+                <div class="seg e"></div>
+                <div class="seg f"></div>
+                <div class="seg g"></div>
+                <div class="seg dp"></div>
+            </div>
+        </aside>
+    </main>
+
+    <script type="module">
+        function q(elem, parent=document) { return parent.querySelector(elem); }
+        function qs(elems, parent=document) { return parent.querySelectorAll(elems); }
+
+        const digitElem = q('#digit');
+
+        let digitAnim;
+        let animStep = 0;
+
+        const formElem = q('form#params');
+
+        const warnDialog = q('#warning');
+
+        function setSeg(seg, val) {
+            console.log('seg:', seg, ', val:', val);
+            q(`.${seg}`, digitElem).classList.toggle('on', val);
+        }
+
+        function showWarning(message) {
+            q('span', warnDialog).textContent = message;
+            warnDialog.classList.add('open');
+        }
+        function hideWarning() {
+            warnDialog.classList.remove('open');
+        }
+        q('button', warnDialog).addEventListener('click', () => hideWarning());
+
+        function set7Seg(arr, charOn, order) {
+            let hasInvalid = false;
+
+            if(arr.length !== 7 && arr.length !== 8) {
+                showWarning('Length must be 7 or 8');
+                return;
+            }
+
+            order.forEach((letter, index) => {
+                if(index >= arr.length && index == 7) return;
+                const currentVal = arr[index];
+                if(currentVal !== '1' && currentVal !== '0') {
+                    hasInvalid = true;
+                    return;
+                }
+                setSeg(letter, arr[index] === charOn);
+            });
+
+            if(hasInvalid) {
+                showWarning('Invalid character detected');
+            } else {
+                hideWarning();
+            }
+        }
+
+        function makeAnim(arr, speed, charOn, order) {
+            if(digitAnim) clearInterval(digitAnim);
+            digitAnim = setInterval(() => {
+                set7Seg(arr[animStep], charOn, order);
+                animStep = (animStep + 1) % arr.length;
+            }, Math.max(10, speed));
+        }
+
+        function update7seg() {
+            const formData = new FormData(formElem);
+
+            const activeLow = formData.get('active-low');
+
+            const charOn = activeLow ? '0' : '1';
+
+            const order = Array.from(formData.get('order')).map(letter => letter === 'p' ? 'dp' : letter);
+
+            const anim = formData.get('anim');
+
+            const animSpeed = Number(q('input[name="anim-speed"]').max) - Number(formData.get('anim-speed'));
+
+            switch(anim) {
+                case 'circle': {
+                    makeAnim([
+                        '11111110',
+                        '11111101',
+                        '11111011',
+                        '11110111',
+                        '11101111',
+                        '11011111',
+                    ], animSpeed, charOn, order);
+                    return;
+                }
+                case 'circle-two': {
+                    makeAnim([
+                        '11110110',
+                        '11101101',
+                        '11011011',
+                        '11110110',
+                        '11101101',
+                        '11011011',
+                    ], animSpeed, charOn, order);
+                    return;
+                }
+                case 'figure8': {
+                    makeAnim([
+                        '11111110',
+                        '11111101',
+                        '10111111',
+                        '11101111',
+                        '11110111',
+                        '11111011',
+                        '10111111',
+                        '11011111',
+                    ], animSpeed, charOn, order);
+                    return;
+                }
+                case 'hex': {
+                    makeAnim([
+                        '11000000',
+                        '11111001',
+                        '10100100',
+                        '10110000',
+                        '10011001',
+                        '10010010',
+                        '10000010',
+                        '11111000',
+                        '10000000',
+                        '10011000',
+                        '10001000',
+                        '10000011',
+                        '11000110',
+                        '10100001',
+                        '10000110',
+                        '10001110',
+                        '10111111',
+                    ], animSpeed, charOn, order);
+                    return;
+                }
+                default: {
+                    clearInterval(digitAnim);
+                    break;
+                }
+            }
+
+            const inputVector = formData.get('input-vector');
+
+            console.log(inputVector);
+
+            set7Seg(inputVector, charOn, order);
+        }
+
+        formElem.addEventListener('input', event => {
+            update7seg();
+        });
+
+        formElem.addEventListener('submit', event => {
+            event.preventDefault();
+
+            const svgBox = svgElem.viewBox.baseVal;
+            const width = svgBox.width;
+            const height = svgBox.height;
+            const datatype = q('#input-datatype', formElem).value;
+
+            makeImage(width, height, svgElem, segElem, datatype);
+        });
+
+        update7seg();
+    </script>
+</body>
+</html>

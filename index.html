@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andreas-Lonn</title>
+    <style>
+        @import url(toolstyle.css) layer(toolstyle);
+
+        :root {
+            --accent-color: #0f0;
+            --on-accent-color: #000;
+            --accent-color-surface: #233;
+            --on-accent-color-surface: #fff;
+            --on-accent-color-surface-not-visited: #8f8;
+            --on-accent-color-surface-visited: #4c4;
+        }
+
+        main {
+            container: main / inline-size;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+
+            --num-cols: 4;
+
+            display: grid;
+            grid-template-columns: repeat(var(--num-cols), 1fr);
+            gap: 0.5em;
+        }
+
+        @container main (width < 750px) {
+            ul {
+                --num-cols: 3;
+            }
+        }
+        @container main (width < 550px) {
+            ul {
+                --num-cols: 2;
+            }
+        }
+        @container main (width < 400px) {
+            ul {
+                --num-cols: 1;
+                gap: 2em;
+            }
+        }
+
+        ul > li > a {
+            width: 100%;
+            height: 100%;
+            display: block;
+            box-sizing: border-box;
+            background-color: var(--accent-color-surface);
+            border: 0 solid var(--on-accent-color-surface);
+            border-radius: 0.3em;
+            text-align: center;
+            text-decoration: none;
+            overflow: hidden;
+            color: var(--on-accent-color-surface-not-visited);
+            transition: border 0.1s;
+
+            display: flex;
+            flex-direction: column;
+        }
+        ul > li > a:visited {
+            color: var(--on-accent-color-surface-visited);
+        }
+        @media (prefers-color-scheme: dark) {
+            ul > li > a {
+                border-width: 0.1em;
+            }
+        }
+
+        ul > li > a span {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        ul > li > a img {
+            width: 100%;
+            aspect-ratio: 2 / 1;
+            object-fit: cover;
+            object-position: top center;
+        }
+        ul > li > a h3 {
+            margin: 0.5em;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <ul>
+            <li><a href="7seg.html">
+                <img alt="" src="images/7seg.png">
+                <span><h3>7seg</h3></span>
+            </a></li>
+        </ul>
+        <a href="https://github.com/andreas-lonn/andreas-lonn.github.io">To GitHub</a>
+    </main>
+</body>
+</html>
